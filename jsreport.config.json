@@ -1,0 +1,58 @@
+{
+    "httpPort": 5488,
+    "allowLocalFilesAccess": true,
+    "store": {
+        "provider": "fs"
+    },
+    "blobStorage": {
+        "provider": "fs"
+    },
+    "templatingEngines": {
+        "timeout": 10000
+    },
+    "chrome": {
+        "timeout": 30000
+    },
+    "assets": { "allowedFiles": "**/*.jpg" },
+    "extensions": {
+       
+        "authentication" : {
+            "cookieSession": {
+                "secret": "<your strong secret>"
+            },
+            "admin": {
+                "username" : "admin",
+                "password": "password"
+            },
+            "enabled": false
+        },
+        "sample-template": {
+            "createSamples": true
+        },
+        "scripts": {
+            "timeout": 30000
+        }, "assets": {
+            "rootUrlForLinks": "http://localhost:5488",
+            "publicAccessEnabled": true
+        },
+        "fs-store": {
+            "persistence": {
+                "provider": "aws-s3"
+            }
+        },
+        "fs-store-aws-s3-persistence": {
+
+            "bucket": "dsi.jsreport",
+            "lock":{
+                "enabled":false
+            },
+            "options":{
+                "accessKeyId": "CRZUCE4DOBIPMZN1GW36" ,
+                "secretAccessKey": "ZamZ7VTNo5r9Xlctv8Y4f7spV/9MInibiIUYognD" ,
+                "endpoint": "http://10.111.115.51:9000" ,
+                "s3ForcePathStyle": true,
+                "signatureVersion": "v4"
+            }
+        }
+    }
+}

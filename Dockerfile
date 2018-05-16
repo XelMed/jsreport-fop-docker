@@ -1,51 +1,43 @@
-FROM ubuntu:xenial
-MAINTAINER Jan Blaha
+FROM node:alpine
 EXPOSE 5488
 
-RUN adduser --disabled-password --gecos "" jsreport && \
-    apt-get update && \
-    apt-get install -y --no-install-recommends curl ca-certificates && \
-    curl -sL https://deb.nodesource.com/setup_8.x | bash - && \
-    apt-get install -y --no-install-recommends nodejs \
-        libgtk2.0-dev \
-        libxtst-dev \
-        libxss1 \
-        libgconf2-dev \
-        libnss3-dev \
-        libasound2-dev \
-        xfonts-75dpi \
-        xfonts-base \
-		default-jre\
-		locales tzdata 
-  
-RUN rm -rf /tmp/* /var/lib/apt/lists/* /var/cache/apt/* && \
-    curl -Lo phantomjs.tar.bz2 https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-1.9.8-linux-x86_64.tar.bz2 && \
-    tar jxvf phantomjs.tar.bz2 && \
-    chmod -R u+x phantomjs-1.9.8-linux-x86_64/bin/phantomjs && \
-    mv phantomjs-1.9.8-linux-x86_64/bin/phantomjs /usr/local/bin/ && \
-    rm -rf phantomjs*
+RUN addgroup -S jsreport && adduser -S -G jsreport jsreport 
+
+RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories \
+  && apk update --no-cache \
+  && apk add --no-cache \
+    chromium>64.0.3282.168-r0 \
+    # just for now as we npm install from git
+    git \
+    # so user can docker exec -it test /bin/bash
+    bash \
+	curl \
+	openjdk7-jre \ 
+  && rm -rf /var/cache/apk/* /tmp/*
+
 
 VOLUME ["/jsreport"]
+RUN mkdir -p /app
+WORKDIR /app
 
-RUN mkdir -p /usr/src/app
-WORKDIR /usr/src/app
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD true
 
-RUN npm install jsreport --production && \
+RUN npm install -g jsreport-cli && \
+    jsreport init && \
+    npm uninstall -g jsreport-cli && \
 	npm install jsreport-fop-xsl-pdf --production && \
-    node node_modules/jsreport --init && \
-    npm cache clean -f && \
-    rm -rf node_modules/moment-timezone/data/unpacked && \
-    rm -rf node_modules/moment/min
+	npm install jsreport-fs-store-aws-s3-persistence-all-options --production && \
+    npm cache clean -f 
 
-ENV NODE_ENV production
-ENV phantom:strategy phantom-server
-ENV tasks:strategy http-server
+ADD run.sh /app/run.sh
+ADD fop.xconf /app/fop.xconf
+ADD jsreport.config.json /app/jsreport.config.json
 
-       
-RUN locale-gen ru_RU.UTF-8
-ENV LANG ru_RU.UTF-8
-ENV LANGUAGE ru_RU:ru
-ENV LC_ALL ru_RU.UTF-8
+ENV LANG=ru_RU.UTF-8 \
+    LANGUAGE=ru_RU:ru \
+    LC_ALL=ru_RU.UTF-8
+	
+
 RUN curl -Lo fop-2.2-bin.tar.gz http://apache-mirror.rbc.ru/pub/apache/xmlgraphics/fop/binaries/fop-2.2-bin.tar.gz && \
     tar zxf fop-2.2-bin.tar.gz && \
     rm -f fop-2.2-bin.tar.gz && \
@@ -54,10 +46,14 @@ RUN curl -Lo fop-2.2-bin.tar.gz http://apache-mirror.rbc.ru/pub/apache/xmlgraphi
 	
 ENV PATH=/usr/local/share/fop-2.2/fop:$PATH
 
-ADD run.sh /usr/src/app/run.sh
-ADD fop.xconf /usr/src/app/fop.xconf
 
 COPY ./fonts /usr/share/fonts
 RUN fc-cache -f -v
 
-CMD ["bash", "/usr/src/app/run.sh"]
+ENV NODE_ENV production
+ENV chrome:launchOptions:executablePath /usr/lib/chromium/chrome
+ENV chrome:launchOptions:args --no-sandbox
+ENV templatingEngines:strategy http-server
+
+RUN fop -v
+CMD ["bash", "/app/run.sh"]

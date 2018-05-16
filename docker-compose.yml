@@ -6,7 +6,3 @@ services:
       dockerfile: Dockerfile
     ports:
       - "5488:5488"
-    volumes: 
-      - jsreport-home:/jsreport
-volumes:
-  jsreport-home:
