@@ -4,5 +4,12 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile
+    image: dockerdsi/jsreport
+    container_name: dsi_jsreport
     ports:
       - "5488:5488"
+    extra_hosts:
+        - "miniohost:10.111.115.51"
+    environment:
+        - extensions:fs-store-aws-s3-persistence:accessKeyId=CRZUCE4DOBIPMZN1GW36
+        - extensions:fs-store-aws-s3-persistence:secretAccessKey=ZamZ7VTNo5r9Xlctv8Y4f7spV/9MInibiIUYognD

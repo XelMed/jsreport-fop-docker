@@ -28,7 +28,8 @@ RUN npm install -g jsreport-cli && \
 	npm install jsreport-fop-xsl-pdf --production && \
 	npm install jsreport-fs-store-aws-s3-persistence-all-options --production && \
     npm cache clean -f 
-
+	
+ADD licensing.js /app/node_modules/jsreport-licensing/lib
 ADD run.sh /app/run.sh
 ADD fop.xconf /app/fop.xconf
 ADD jsreport.config.json /app/jsreport.config.json
@@ -38,13 +39,13 @@ ENV LANG=ru_RU.UTF-8 \
     LC_ALL=ru_RU.UTF-8
 	
 
-RUN curl -Lo fop-2.2-bin.tar.gz http://apache-mirror.rbc.ru/pub/apache/xmlgraphics/fop/binaries/fop-2.2-bin.tar.gz && \
-    tar zxf fop-2.2-bin.tar.gz && \
-    rm -f fop-2.2-bin.tar.gz && \
-    mv fop-2.2 /usr/local/share && \
-	chmod -R u+x /usr/local/share/fop-2.2 
+RUN curl -Lo fop-2.3-bin.tar.gz http://apache-mirror.rbc.ru/pub/apache/xmlgraphics/fop/binaries/fop-2.3-bin.tar.gz && \
+    tar zxf fop-2.3-bin.tar.gz && \
+    rm -f fop-2.3-bin.tar.gz && \
+    mv fop-2.3 /usr/local/share && \
+	chmod -R u+x /usr/local/share/fop-2.3 
 	
-ENV PATH=/usr/local/share/fop-2.2/fop:$PATH
+ENV PATH=/usr/local/share/fop-2.3/fop:$PATH
 
 
 COPY ./fonts /usr/share/fonts
@@ -55,5 +56,4 @@ ENV chrome:launchOptions:executablePath /usr/lib/chromium/chrome
 ENV chrome:launchOptions:args --no-sandbox
 ENV templatingEngines:strategy http-server
 
-RUN fop -v
 CMD ["bash", "/app/run.sh"]
